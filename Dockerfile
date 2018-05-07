@@ -19,13 +19,23 @@ RUN php -r "readfile('http://getcomposer.org/installer');" | php -- --install-di
 # install php dependecies
 COPY ./app /var/www/webapp
 WORKDIR /var/www/webapp
-RUN cd /var/www/webapp
-RUN ls -l
+
+#
+# speedup composer: 
+
+# 1 - setup https to speedup composer. see: https://debril.org/how-to-fix-composers-slowness.html
+RUN php /usr/bin/composer config --global repo.packagist composer https://packagist.org 
+
+# 2 - speed up composer with this library that do parallel downloads
+RUN php /usr/bin/composer -vvv global require hirak/prestissimo
+
+# fix and update
+RUN php /usr/bin/composer self-update
+
 
 
 # apache enable mod_rewrite
 RUN a2enmod rewrite
-
 
 #setup apache2
 ENV APACHE_RUN_USER www-data
